@@ -14,6 +14,7 @@ const startPosY = tileSize * rows / 2;
 
 let lastTime = performance.now();
 
+let gameStarted = false;
 let gameover = false;
 let win = false;
 
@@ -40,7 +41,7 @@ window.onload = function(){
 
     drawGrid(1, tileSize, tileSize);
 
-    context.fillStyle = '#00FF00';
+    context.fillStyle = '#00d300ff';
     context.fillRect(snake.x, snake.y, tileSize, tileSize);
     apple.eaten = true;
     document.addEventListener('keydown', moveSnake);
@@ -49,6 +50,10 @@ window.onload = function(){
 }
 
 function update(){
+    if(!gameStarted){
+        
+        return;
+    }
     //controlla se esce fuori dal campo oppure se colpisce se stesso
     gameover = checkSelfCollision();
     //controlla se il serpente ha riempito tutto lo schermo
@@ -118,6 +123,14 @@ function update(){
     }
     drawGrid(1, tileSize, tileSize);
     
+}
+
+function playGame(){ 
+    gameStarted = true;
+    playBtn.style.display = 'none';
+    resetGame();
+    context.fillStyle = 'red';
+    context.fillText('press space to start', canvasWidth/3, 45); 
 }
 
 function appleOnSnake(){
