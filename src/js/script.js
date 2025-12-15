@@ -1,6 +1,8 @@
 const board = document.getElementById('board');
 const context = board.getContext('2d');
 
+const playBtn = document.getElementById('playBtn');
+
 const rows = 16;
 const col = 16;
 
@@ -51,7 +53,6 @@ window.onload = function(){
 
 function update(){
     if(!gameStarted){
-        
         return;
     }
     //controlla se esce fuori dal campo oppure se colpisce se stesso
@@ -73,8 +74,12 @@ function update(){
     }
 
     if(gameover){
+        context.clearRect(apple.x, apple.y, tileSize, tileSize);
+        drawGrid(1, tileSize, tileSize);
         context.fillStyle = 'red';
         context.font = '60px sans-serif';
+        playBtn.textContent = 'Restart!';
+        playBtn.style.display = 'block';
         context.fillText('game over', tileSize, 45); 
         return;
     }
@@ -177,10 +182,6 @@ function moveSnake(e){
     }
 
     snake.newDirection = newDir;
-
-    if(gameover && (e.code == 'ArrowUp' || e.code == 'ArrowDown' || e.code == 'ArrowLeft' || e.code == 'ArrowRight')){
-        resetGame();
-    }
 }
 
 function addBody(){
@@ -200,6 +201,10 @@ function resetGame(){
     snake.body.x = [];
     snake.body.y = [];
     gameover = false;
+    do{
+        apple.x = Math.floor(Math.random() * col) * tileSize;
+        apple.y = Math.floor(Math.random() * rows) * tileSize;
+    }while(appleOnSnake());
 }
 
 function drawGrid(lineWidth, tileWidth, tileHeight){
