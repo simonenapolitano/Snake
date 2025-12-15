@@ -107,16 +107,10 @@ function update(){
     context.fillRect(snake.x, snake.y, tileSize, tileSize);
     
     if(apple.eaten){
-        apple.x = Math.floor(Math.random() * col) * tileSize;
-        apple.y = Math.floor(Math.random() * rows) * tileSize;
-        //mentre la mela viene generata sopra il serpente, rigenera la posizione
-        for (let i = 0; i < body.x.length; i++) {
-            while((apple.x == snake.x || apple.x == snake.body.x[i]) && (apple.y == snake.y || apple.y == snake.body.y[i])){ 
-                apple.x = Math.floor(Math.random() * col) * tileSize;
-                apple.y = Math.floor(Math.random() * rows) * tileSize;
-            }
-        }
-        
+        do{
+            apple.x = Math.floor(Math.random() * col) * tileSize;
+            apple.y = Math.floor(Math.random() * rows) * tileSize;
+        }while(appleOnSnake());
         apple.eaten = false;
         drawApple();
     } else if(!apple.eaten){
@@ -124,6 +118,19 @@ function update(){
     }
     drawGrid(1, tileSize, tileSize);
     
+}
+
+function appleOnSnake(){
+    if(apple.x == snake.x && apple.y == snake.y){
+        return true;
+    }
+    //mentre la mela viene generata sopra il serpente, rigenera la posizione
+    for(let i = 0; i < snake.body.x.length; i++){
+        if(apple.x == snake.body.x[i] && apple.y == snake.body.y[i]){
+            return true;
+        }
+    }
+    return false;
 }
 
 function drawApple(){
