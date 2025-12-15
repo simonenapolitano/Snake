@@ -107,14 +107,16 @@ function update(){
     context.fillRect(snake.x, snake.y, tileSize, tileSize);
     
     if(apple.eaten){
-        //addBody(); 
         apple.x = Math.floor(Math.random() * col) * tileSize;
         apple.y = Math.floor(Math.random() * rows) * tileSize;
-        //mentre la mela viene generata sopra il serpente
-        while((apple.x == snake.x || apple.x == snake.body.x) && (apple.y == snake.y || apple.y == snake.body.y)){ 
-            apple.x = Math.floor(Math.random() * col) * tileSize;
-            apple.y = Math.floor(Math.random() * rows) * tileSize;
+        //mentre la mela viene generata sopra il serpente, rigenera la posizione
+        for (let i = 0; i < body.x.length; i++) {
+            while((apple.x == snake.x || apple.x == snake.body.x[i]) && (apple.y == snake.y || apple.y == snake.body.y[i])){ 
+                apple.x = Math.floor(Math.random() * col) * tileSize;
+                apple.y = Math.floor(Math.random() * rows) * tileSize;
+            }
         }
+        
         apple.eaten = false;
         drawApple();
     } else if(!apple.eaten){
