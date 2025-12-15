@@ -9,8 +9,13 @@ const tileSize = 32;
 const boardWidth = rows * tileSize;
 const boardHeight = rows * tileSize;
 
-let lastTime = 0;
+const startPosX = tileSize * col / 2;
+const startPosY = tileSize * rows / 2;
 
+let lastTime = performance.now();
+
+let gameover = false;
+let win = false;
 
 let apple = {
     x: Math.floor(Math.random() * col) * tileSize,
@@ -19,13 +24,14 @@ let apple = {
 }
 
 let snake = {
-    x : 0, //the x of the head
-    y : 0, //the y of the head
+    x : startPosX, //the x of the head
+    y : startPosY, //the y of the head
     body: {
         x: [],
         y: []
     },
-    direction: 'down'
+    direction: 'down',
+    newDirection: 'down'
 }
 
 window.onload = function(){
@@ -33,65 +39,93 @@ window.onload = function(){
     board.height = boardHeight;
 
     drawGrid(1, tileSize, tileSize);
-    context.fillStyle = '#FF0000';
+
+    context.fillStyle = '#00FF00';
     context.fillRect(snake.x, snake.y, tileSize, tileSize);
     apple.eaten = true;
     document.addEventListener('keydown', moveSnake);
     
-    setInterval(update, 500); //chiama l'update ogni 500 ms = 0.5 secondi
+    setInterval(update, 200); //chiama l'update ogni 500 ms = 0.5 secondi
 }
 
-function update(currentTime){
+function update(){
+    //controlla se esce fuori dal campo oppure se colpisce se stesso
+    gameover = checkSelfCollision();
+    //controlla se il serpente ha riempito tutto lo schermo
+    if(snake.body.x.length + 1 == col*rows){
+        win = true;
+        
+    }
+    if(win){
+        context.fillStyle = '#00FF00';
+        context.font = '60px sans-serif';
+        context.fillText('you win!', tileSize, 45); 
+        return;
+    }
+        
+    if((snake.x < 0 || snake.x >= boardWidth || snake.y < 0 || snake.y >= boardHeight)){
+        gameover = true;
+    }
+
+    if(gameover){
+        context.fillStyle = 'red';
+        context.font = '60px sans-serif';
+        context.fillText('game over', tileSize, 45); 
+        return;
+    }
     let currentHeadX = snake.x;
     let currentHeadY = snake.y;
-    switch(snake.direction){
-        case 'up':
-            snake.y -= tileSize;
-            break;
-        case 'down':
-            snake.y += tileSize;
-            break;
-        case 'right':
-            snake.x += tileSize;
-            break;
-        case 'left':
-            snake.x -= tileSize;
-            break;
-    }
-    context.clearRect(0, 0, boardWidth, boardHeight);
     
-    context.fillStyle = '#FF0000';
-    for (let i = 0; i < snake.body.x.length; i++) {
-        if(snake.body.x.length > 0){
-            context.fillRect(snake.body.x[snake.body.x.lenght - i - 1], snake.body.y[snake.body.x.lenght - i - 1], tileSize, tileSize);
-        } else {
-            context.fillRect(snake.x, snake.y, tileSize, tileSize);
-        }
-        /*snake.body.x[i] = currentHeadX;
-        snake.body.y[i] = currentHeadY;*/
-        //context.fillRect(snake.body.x[i], snake.body.y[i], tileSize, tileSize);
-    }
-    context.fillRect(snake.x, snake.y, tileSize, tileSize);
+    snake.direction = snake.newDirection;
+
+    snake.y += snake.direction == 'up'? -tileSize : snake.direction == 'down'? tileSize : 0;
+    snake.x += snake.direction == 'right'? tileSize : snake.direction == 'left'? -tileSize : 0;
+
+    context.clearRect(0, 0, boardWidth, boardHeight);
+
     if(checkAppleEaten(snake, apple)){
         addBody();
         apple.eaten = true;
     }
+    
+    context.fillStyle = '#00FF00';
+    for (let i = snake.body.x.length - 1; i > 0; i--) {
+        snake.body.x[i] = snake.body.x[i - 1]; //copia le posizioni per far muovere il corpo
+        snake.body.y[i] = snake.body.y[i - 1]; 
+    }
+
+    if (snake.body.x.length > 0) {
+        snake.body.x[0] = currentHeadX;
+        snake.body.y[0] = currentHeadY;
+    }
+    
+    
+    for(let i = 0; i < snake.body.x.length; i++){
+        context.fillRect(snake.body.x[i], snake.body.y[i], tileSize, tileSize);
+    }
+    context.fillStyle = '#00d300ff';
+    context.fillRect(snake.x, snake.y, tileSize, tileSize);
+    
     if(apple.eaten){
         //addBody(); 
         apple.x = Math.floor(Math.random() * col) * tileSize;
         apple.y = Math.floor(Math.random() * rows) * tileSize;
+        //mentre la mela viene generata sopra il serpente
+        while((apple.x == snake.x || apple.x == snake.body.x) && (apple.y == snake.y || apple.y == snake.body.y)){ 
+            apple.x = Math.floor(Math.random() * col) * tileSize;
+            apple.y = Math.floor(Math.random() * rows) * tileSize;
+        }
         apple.eaten = false;
         drawApple();
     } else if(!apple.eaten){
         drawApple();
     }
     drawGrid(1, tileSize, tileSize);
-    const deltaTime = (currentTime - lastTime)/1000;
-    lastTime = currentTime;
+    
 }
 
 function drawApple(){
-    context.fillStyle = '#00FF00';
+    context.fillStyle = '#FF0000';
     context.fillRect(apple.x, apple.y, tileSize, tileSize);
 }
 
@@ -102,20 +136,28 @@ function checkAppleEaten(a, b){
             a.y + tileSize > b.y;
 }
 
+function checkSelfCollision(){
+    for(let i = 0; i < snake.body.x.length; i++){
+        if(snake.x == snake.body.x[i] && snake.y == snake.body.y[i]){
+            return true;
+        }
+    }
+    return false;
+}
+
 function moveSnake(e){
-    switch(e.code){
-        case 'ArrowUp':
-            snake.direction = 'up';
-            break;
-        case 'ArrowDown':
-            snake.direction = 'down';
-            break;
-        case 'ArrowLeft':
-            snake.direction = 'left';
-            break;
-        case 'ArrowRight':
-            snake.direction = 'right';
-            break;
+    const newDir = e.code == 'ArrowUp' ? 'up' : e.code == 'ArrowDown' ? 'down' : e.code == 'ArrowLeft' ? 'left' : e.code == 'ArrowRight' ? 'right' : snake.direction;
+    if(snake.body.x.length > 0){
+        //controlla se la nuova direzione è opposta a quella attuale(quindi andrebbe contro a una sua parte del corpo)
+        if((newDir == 'up' && snake.direction == 'down') || (newDir == 'down' && snake.direction == 'up') || (newDir == 'left' && snake.direction == 'right') || (newDir == 'right' && snake.direction == 'left')){
+            return;
+        }
+    }
+
+    snake.newDirection = newDir;
+
+    if(gameover && (e.code == 'ArrowUp' || e.code == 'ArrowDown' || e.code == 'ArrowLeft' || e.code == 'ArrowRight')){
+        resetGame();
     }
 }
 
@@ -127,6 +169,15 @@ function addBody(){
         snake.body.x.push(snake.body.x[snake.body.x.length - 1]);
         snake.body.y.push(snake.body.y[snake.body.y.length - 1]);
     }
+}
+
+function resetGame(){
+    snake.x = startPosX;
+    snake.y = startPosY;
+    snake.direction = 'down';
+    snake.body.x = [];
+    snake.body.y = [];
+    gameover = false;
 }
 
 function drawGrid(lineWidth, tileWidth, tileHeight){
@@ -148,5 +199,4 @@ function drawGrid(lineWidth, tileWidth, tileHeight){
         context.lineTo(width, j);
         context.stroke();
     }
-
 }
