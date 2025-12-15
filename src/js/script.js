@@ -65,6 +65,8 @@ function update(){
     if(win){
         context.fillStyle = '#00FF00';
         context.font = '60px sans-serif';
+        playBtn.textContent = 'Restart!';
+        playBtn.style.display = 'block';
         context.fillText('you win!', tileSize, 45); 
         return;
     }
@@ -135,7 +137,6 @@ function playGame(){
     playBtn.style.display = 'none';
     resetGame();
     context.fillStyle = 'red';
-    context.fillText('press space to start', canvasWidth/3, 45); 
 }
 
 function appleOnSnake(){
@@ -201,7 +202,11 @@ function resetGame(){
     snake.body.x = [];
     snake.body.y = [];
     gameover = false;
+    win = false;
     do{
+        if(snake.body.x.length == (col*rows)-1){
+            break;
+        }
         apple.x = Math.floor(Math.random() * col) * tileSize;
         apple.y = Math.floor(Math.random() * rows) * tileSize;
     }while(appleOnSnake());
